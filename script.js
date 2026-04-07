@@ -67,7 +67,7 @@ yesBtn.addEventListener('click', () => {
         <div class="success-screen" style="display: flex;">
             <h1>I knew it! ❤️</h1>
             <div class="img-container">
-                <img src="https://media.tenor.com/gUiu1zyxfzYAAAAi/bear-kiss-bear-kisses.gif" alt="Cute Bears Hugging">
+                <img src="success.gif" alt="Cute Bears Hugging">
             </div>
         </div>
     `;
