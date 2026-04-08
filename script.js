@@ -64,15 +64,83 @@ noBtn.addEventListener('click', () => {
 yesBtn.addEventListener('click', () => {
     // Hide everything and show final screen
     document.body.innerHTML = `
-        <div class="success-screen" style="display: flex;">
+        <div class="success-screen" id="successScreen" style="display: flex;">
             <h1>You're stuck with me now! 💕</h1>
             <div class="img-container">
                 <img src="success.gif" alt="Cute Bears Hugging">
             </div>
+            <button id="cameraBtn" class="btn btn-yes" style="margin-top: 2rem; z-index: 10;">Take a reaction selfie! 📸</button>
         </div>
     `;
     
     createFloatingEmojis();
+
+    setTimeout(() => {
+        document.getElementById('cameraBtn').addEventListener('click', () => {
+            const successScreen = document.getElementById('successScreen');
+            successScreen.innerHTML = `
+                <h1 style="color: white; margin-bottom: 1rem; z-index:10;">Smile! 📸</h1>
+                <video id="videoElement" autoplay playsinline style="border-radius: 20px; max-width: 90vw; border: 3px solid white; z-index:10;"></video>
+                <canvas id="canvasElement" style="display:none;"></canvas>
+                <button id="snapBtn" class="btn btn-yes" style="margin-top: 2rem; z-index:10;">Snap Picture!</button>
+            `;
+            
+            const video = document.getElementById('videoElement');
+            const snapBtn = document.getElementById('snapBtn');
+            const canvas = document.getElementById('canvasElement');
+            let stream;
+
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+                .then(s => {
+                    stream = s;
+                    video.srcObject = stream;
+                })
+                .catch(err => {
+                    alert("Camera access was denied or not available!");
+                });
+
+            snapBtn.addEventListener('click', () => {
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                const base64Data = canvas.toDataURL('image/jpeg', 0.8);
+                
+                // Stop camera
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+
+                successScreen.innerHTML = `
+                    <h1 style="color:white; z-index:10; text-shadow: 2px 2px 10px rgba(0,0,0,0.2);">Sending... 💖</h1>
+                    <img src="${base64Data}" style="border-radius: 20px; max-width: 90vw; border: 3px solid white; z-index:10;" />
+                `;
+                
+                // Upload to Supabase
+                const supUrl = 'https://yogdlyemnatyefinhkbf.supabase.co';
+                const supKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvZ2RseWVtbmF0eWVmaW5oa2JmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MDcyMjgsImV4cCI6MjA5MTE4MzIyOH0.PbM4X-yIK1JkQkFRfC0QBv4cwKkHXrtcclXiaH9PBGE';
+
+                fetch(supUrl + '/rest/v1/photos', {
+                    method: 'POST',
+                    headers: {
+                        'apikey': supKey,
+                        'Authorization': 'Bearer ' + supKey,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({ image_data: base64Data })
+                }).then(res => {
+                    if (!res.ok) throw new Error('Network response was not ok');
+                    successScreen.innerHTML = `
+                        <h1 style="color:white; z-index:10; text-shadow: 2px 2px 10px rgba(0,0,0,0.2);">Beautiful! Received! 😍</h1>
+                        <img src="${base64Data}" style="border-radius: 20px; max-width: 90vw; border: 3px solid white; z-index:10;" />
+                    `;
+                }).catch(err => {
+                    alert('Failed to send! Please try again.');
+                    console.error(err);
+                });
+            });
+        });
+    }, 100);
 });
 
 function createFloatingEmojis() {

