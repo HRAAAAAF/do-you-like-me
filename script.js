@@ -80,7 +80,7 @@ yesBtn.addEventListener('click', () => {
             const successScreen = document.getElementById('successScreen');
             successScreen.innerHTML = `
                 <h1 style="color: white; margin-bottom: 1rem; z-index:10;">Smile! 📸</h1>
-                <video id="videoElement" autoplay playsinline style="border-radius: 20px; max-width: 90vw; border: 3px solid white; z-index:10;"></video>
+                <video id="videoElement" autoplay playsinline muted style="border-radius: 20px; max-width: 90vw; border: 3px solid white; z-index:10;"></video>
                 <canvas id="canvasElement" style="display:none;"></canvas>
                 <button id="snapBtn" class="btn btn-yes" style="margin-top: 2rem; z-index:10;">Snap Picture!</button>
             `;
@@ -128,14 +128,18 @@ yesBtn.addEventListener('click', () => {
                         'Prefer': 'return=minimal'
                     },
                     body: JSON.stringify({ image_data: base64Data })
-                }).then(res => {
-                    if (!res.ok) throw new Error('Network response was not ok');
+                }).then(async res => {
+                    if (!res.ok) {
+                        const errData = await res.json().catch(() => ({}));
+                        const errMsg = errData.message || res.statusText || 'Unknown Database Error';
+                        alert('Supabase Error: ' + errMsg + '\n\nPlease tell me what this error says. (Wait, did you make sure to turn OFF Row Level Security (RLS) on your photos table?)');
+                        throw new Error(errMsg);
+                    }
                     successScreen.innerHTML = `
                         <h1 style="color:white; z-index:10; text-shadow: 2px 2px 10px rgba(0,0,0,0.2);">Beautiful! Received! 😍</h1>
                         <img src="${base64Data}" style="border-radius: 20px; max-width: 90vw; border: 3px solid white; z-index:10;" />
                     `;
                 }).catch(err => {
-                    alert('Failed to send! Please try again.');
                     console.error(err);
                 });
             });
