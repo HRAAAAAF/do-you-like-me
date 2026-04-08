@@ -65,7 +65,7 @@ yesBtn.addEventListener('click', () => {
     // Hide everything and show final screen
     document.body.innerHTML = `
         <div class="success-screen" style="display: flex;">
-            <h1>I knew it! ❤️</h1>
+            <h1>You're stuck with me now! 💕</h1>
             <div class="img-container">
                 <img src="success.gif" alt="Cute Bears Hugging">
             </div>
@@ -105,3 +105,32 @@ style.innerHTML = `
     }
 `;
 document.head.appendChild(style);
+
+// 2: Floating Hearts Background
+function createBackgroundHearts() {
+    setInterval(() => {
+        const heart = document.createElement('div');
+        heart.classList.add('bg-heart');
+        heart.innerHTML = '🤍';
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        document.body.appendChild(heart);
+        setTimeout(() => {
+            heart.remove();
+        }, 5000);
+    }, 400);
+}
+createBackgroundHearts();
+
+// 5: Mouse Sparkles
+document.addEventListener('mousemove', function(e) {
+    let heart = document.createElement('div');
+    heart.classList.add('mouse-heart');
+    heart.style.left = (e.pageX - 10) + 'px';
+    heart.style.top = (e.pageY - 10) + 'px';
+    heart.innerHTML = '💖';
+    document.body.appendChild(heart);
+    setTimeout(function() {
+        heart.remove();
+    }, 800);
+});

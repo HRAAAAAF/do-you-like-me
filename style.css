@@ -141,3 +141,31 @@ h1 {
     0% { transform: translateY(0) scale(1); opacity: 1; }
     100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
 }
+
+/* Mouse Sparkles styles */
+.mouse-heart {
+    position: absolute;
+    pointer-events: none;
+    font-size: 1.5rem;
+    animation: fadeOutUp 0.8s ease-out forwards;
+    z-index: 9999;
+}
+@keyframes fadeOutUp {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-50px) scale(0.5); }
+}
+
+/* Background Floating Hearts */
+.bg-heart {
+    position: fixed;
+    bottom: -50px;
+    pointer-events: none;
+    font-size: 2rem;
+    opacity: 0.3;
+    animation: floatBg 5s linear forwards;
+    z-index: 1; /* Stay behind the card */
+}
+@keyframes floatBg {
+    0% { transform: translateY(0) rotate(0deg); opacity: 0.5; }
+    100% { transform: translateY(-120vh) rotate(360deg); opacity: 0; }
+}
